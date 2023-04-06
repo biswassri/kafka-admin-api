@@ -6,6 +6,9 @@ import io.smallrye.common.annotation.Blocking;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.common.config.ConfigResource;
 import org.bf2.admin.kafka.admin.AccessControlOperations;
 import org.bf2.admin.kafka.admin.ConsumerGroupOperations;
 import org.bf2.admin.kafka.admin.KafkaAdminConfigRetriever;
@@ -33,6 +36,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -83,6 +87,16 @@ public class RestOperations implements OperationsHandler {
                         .entity(createdTopic).build());
     }
 
+    public void getTopicConfig (AdminClient adminClient, Types.NewTopic inputTopic) throws ExecutionException, InterruptedException {
+        //Testing Config code
+        ConfigResource configResource =
+                new ConfigResource(ConfigResource.Type.TOPIC, inputTopic.getName());
+        DescribeConfigsResult describeConfigsResult =
+                adminClient.describeConfigs(Collections.singleton(configResource));
+        Config configs = describeConfigsResult.all().get().get(configResource);
+        configs.entries().stream().filter(
+                entry -> !entry.isDefault()).forEach(System.out::println);
+    }
     @Override
     @Counted("describe_topic_requests")
     @Timed("describe_topic_request_time")
